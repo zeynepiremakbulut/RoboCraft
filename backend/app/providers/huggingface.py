@@ -120,9 +120,45 @@ class HuggingFace3DProvider(Base3DProvider):
         return dest_path
 
     def _run_instantmesh_sync(self, image_path: str, output_glb_path: Path, job: GenerationJob) -> None:
-        """Synchronous wrapper for gradio_client call with error formatting."""
-        from gradio_client import handle_file
+        """Synchronous 3D generation wrapper supporting both Google Colab Bridge and HuggingFace."""
+        from gradio_client import Client, handle_file
 
+        # 1. If Google Colab GPU Bridge is connected, use it (Ultra-fast, Unlimited)
+        if settings.COLAB_GRADIO_URL:
+            colab_target = settings.COLAB_GRADIO_URL.strip()
+            client = Client(colab_target)
+            job.progress = 40
+            job.status = "generating"
+
+            try:
+                res = client.predict(
+                    input_image=handle_file(str(image_path)),
+                    api_name="/predict"
+                )
+            except Exception:
+                res = client.predict(input_image=handle_file(str(image_path)))
+
+            glb_file = res if isinstance(res, str) else None
+            if isinstance(res, dict):
+                glb_file = res.get("value") or res.get("path")
+            elif isinstance(res, (list, tuple)):
+                for item in res:
+                    p = item if isinstance(item, str) else (item.get("value", "") if isinstance(item, dict) else "")
+                    if str(p).endswith(".glb"):
+                        glb_file = p
+                        break
+                if not glb_file and len(res) > 0:
+                    last = res[-1]
+                    glb_file = last if isinstance(last, str) else (last.get("value") if isinstance(last, dict) else None)
+
+            if not glb_file or not os.path.exists(glb_file):
+                raise RuntimeError(f"Colab GPU GLB üretemedi: {res}")
+
+            shutil.copyfile(glb_file, str(output_glb_path))
+            job.progress = 90
+            return
+
+        # 2. Hugging Face Cloud Fallback
         client = self._get_client()
 
         job.progress = 25
@@ -150,7 +186,7 @@ class HuggingFace3DProvider(Base3DProvider):
             if "ZeroGPU quota" in err_msg:
                 raise RuntimeError(
                     "Hugging Face ZeroGPU günlük/anlık kullanım kotanız doldu. "
-                    "Hugging Face ücretsiz kotaları saatlik/günlük olarak sıfırlar, ya da yeni bir HF hesabı/tokeni ile anında devam edebilirsiniz."
+                    "Google Colab GPU köprüsünü (Settings sekmesinden) kullanarak kotasız devam edebilirsiniz."
                 ) from e
             raise
 
