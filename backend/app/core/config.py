@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     TRIPO3D_API_KEY: Optional[str] = None
     MESHY_API_KEY: Optional[str] = None
     HF_TOKEN: Optional[str] = None
+    COLAB_GRADIO_URL: Optional[str] = None
 
     # Which provider to use for each mode ('huggingface' | 'tripo3d' | 'meshy')
     TEXT_TO_3D_PROVIDER: str = "huggingface"

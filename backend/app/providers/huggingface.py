@@ -24,7 +24,15 @@ class HuggingFace3DProvider(Base3DProvider):
 
     @property
     def display_name(self) -> str:
+        if settings.COLAB_GRADIO_URL:
+            return "Google Colab T4 GPU (Unlimited / Kotasız)"
         return "HuggingFace InstantMesh + FLUX (Free)"
+
+    def _get_client(self):
+        from gradio_client import Client
+        target = settings.COLAB_GRADIO_URL.strip() if settings.COLAB_GRADIO_URL else self.SPACE_NAME
+        token = None if settings.COLAB_GRADIO_URL else (settings.HF_TOKEN or None)
+        return Client(target, token=token)
 
     @property
     def supports_text(self) -> bool:
@@ -113,9 +121,9 @@ class HuggingFace3DProvider(Base3DProvider):
 
     def _run_instantmesh_sync(self, image_path: str, output_glb_path: Path, job: GenerationJob) -> None:
         """Synchronous wrapper for gradio_client call with error formatting."""
-        from gradio_client import Client, handle_file
+        from gradio_client import handle_file
 
-        client = Client(self.SPACE_NAME, token=settings.HF_TOKEN or None)
+        client = self._get_client()
 
         job.progress = 25
         job.status = "generating"

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.api.routes import generate, models as models_router
+from app.api.routes import generate, models as models_router, settings as settings_router
 
 
 @asynccontextmanager
@@ -45,6 +45,7 @@ app.mount(
 # API routes
 app.include_router(generate.router, prefix="/api/generate", tags=["generation"])
 app.include_router(models_router.router, prefix="/api/models", tags=["models"])
+app.include_router(settings_router.router, prefix="/api/settings", tags=["settings"])
 
 
 @app.get("/health")

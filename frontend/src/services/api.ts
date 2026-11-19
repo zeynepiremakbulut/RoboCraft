@@ -63,3 +63,22 @@ export async function getProviders(): Promise<ProviderInfo[]> {
 export function getModelDownloadUrl(jobId: string, format: string): string {
   return `/api/generate/jobs/${jobId}/download?format=${format}`;
 }
+
+export interface SettingsData {
+  colab_url?: string | null;
+  hf_configured: boolean;
+  tripo_configured: boolean;
+  meshy_configured: boolean;
+}
+
+/** Get system settings including Colab URL */
+export async function getSettings(): Promise<SettingsData> {
+  const { data } = await client.get<SettingsData>('/settings');
+  return data;
+}
+
+/** Update Colab tunnel URL */
+export async function updateColabUrl(colabUrl: string): Promise<SettingsData> {
+  const { data } = await client.post<SettingsData>('/settings', { colab_url: colabUrl });
+  return data;
+}
