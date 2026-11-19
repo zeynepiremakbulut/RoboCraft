@@ -1,0 +1,40 @@
+# Environment and secrets (NEVER commit API keys)
+.env
+.env.*
+**/.env
+**/.env.*
+*.env
+!.env.example
+!**/.env.example
+
+# Dependencies
+node_modules/
+**/node_modules/
+__pycache__/
+*.pyc
+.venv/
+**/venv/
+**/env/
+
+# Build outputs
+dist/
+**/dist/
+build/
+*.egg-info/
+
+# Generated 3D models & cache
+backend/generated/**
+!backend/generated/.gitkeep
+generated/**
+!generated/.gitkeep
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
